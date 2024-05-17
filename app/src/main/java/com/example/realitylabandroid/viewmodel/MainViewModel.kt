@@ -15,12 +15,14 @@ import org.vosk.android.SpeechStreamService
 import org.vosk.android.StorageService
 import com.example.realitylabandroid.MyRecognitionListener
 import com.example.realitylabandroid.R
+import com.example.realitylabandroid.repo.MainRepository
 import com.example.realitylabandroid.viewmodel.component.State
 import java.io.IOException
 import java.io.InputStream
 
 
 public class MainViewModel : ViewModel() {
+    val mainRepository = MainRepository()
     lateinit var context:Context
     lateinit var myRecognitionListener:MyRecognitionListener
 
@@ -202,11 +204,12 @@ public class MainViewModel : ViewModel() {
         val res = jObject.getString("text")
         println(res)
         voiseText.postValue(voiseText.value+
-                (hypothesis + " " + FuzzySearch.ratio(
+                (res + " " + FuzzySearch.ratio(
                     res,
                     "собака лежать"
                 )).toString() + "\n"
         )
+        mainRepository.sendText(res)
 
     }
     fun onFinalResult(hypothesis: String) {
@@ -220,8 +223,8 @@ public class MainViewModel : ViewModel() {
     fun onPartialResult(hypothesis: String) {
         val jObject = JSONObject(hypothesis)
         val res = jObject.getString("partial")
-        //if(!res.isEmpty())
-            voiseText.postValue(voiseText.value+res + "\n")
+      //  if(!res.isEmpty())
+         //   voiseText.postValue(voiseText.value+res + "\n")
     }
     fun onError(eStr: String) {
         setErrorState(eStr)
