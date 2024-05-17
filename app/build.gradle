@@ -38,7 +38,7 @@ dependencies {
     implementation group: 'com.alphacephei', name: 'vosk-android', version: '0.3.47'
     implementation 'me.xdrop:fuzzywuzzy:1.4.0'
 
-    implementation("com.squareup.retrofit2:retrofit:+)")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
 
     implementation project(':models')
 
