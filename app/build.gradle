@@ -1,0 +1,51 @@
+apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
+repositories {
+    google()
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 34
+    defaultConfig {
+        applicationId "com.rtuitlab.realitylab"
+        minSdkVersion 23
+        targetSdkVersion 31
+        versionCode 3
+        versionName "1.2"
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    dataBinding{
+        enabled = true
+    }
+}
+
+dependencies {
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation group: 'com.alphacephei', name: 'vosk-android', version: '0.3.47'
+    implementation 'me.xdrop:fuzzywuzzy:1.4.0'
+
+    implementation("com.squareup.retrofit2:retrofit:+)")
+
+    implementation project(':models')
+
+    implementation("androidx.appcompat:appcompat:1.6.1")
+
+    implementation("androidx.core:core-ktx:1.13.1")
+
+
+
+}
