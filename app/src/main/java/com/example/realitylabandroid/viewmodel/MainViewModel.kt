@@ -1,6 +1,7 @@
 package com.example.realitylabandroid.viewmodel
 
 import android.content.Context
+import android.content.Intent
 import android.text.SpannableString
 import android.util.Log
 import android.view.LayoutInflater
@@ -25,6 +26,7 @@ import org.vosk.android.SpeechService
 import org.vosk.android.SpeechStreamService
 import org.vosk.android.StorageService
 import java.io.IOException
+import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -50,6 +52,12 @@ public class MainViewModel : ViewModel() {
 
     lateinit var startTime:MutableLiveData<Long>
 
+    lateinit var hh:MutableLiveData<String>
+    lateinit var mm:MutableLiveData<String>
+    lateinit var ss:MutableLiveData<String>
+    lateinit var thread:Thread
+    lateinit var allText:MutableLiveData<StringBuilder>
+    var end = false
 
     public fun create(activity:AppCompatActivity,context: Context,linearLayout: LinearLayout,scrollView: ScrollView) {
         this.context = context
@@ -75,17 +83,35 @@ public class MainViewModel : ViewModel() {
         textButtonStopContinue = MutableLiveData<String>(context.getString(R.string.pause))
         enabledButtonStopContinue = MutableLiveData<Boolean>(false);
         toggleButtonStopContinue = MutableLiveData<Boolean>(false);
-        startTime = MutableLiveData<Long>(0)
+        startTime = MutableLiveData<Long>(System.currentTimeMillis())
+
+        allText = MutableLiveData<StringBuilder>(StringBuilder(""));
+
+        hh = MutableLiveData<String>("")
+        mm = MutableLiveData<String>("")
+        ss = MutableLiveData<String>("")
+
 
 //        inflateGreenCard(1000)
 //        inflateGreenCard(6000)
 //        inflateRedCard(10000)
         val sdf = SimpleDateFormat("HH:mm:ss")
-        startTime.postValue(System.currentTimeMillis())
         val textTime = sdf.format(Date(System.currentTimeMillis()))
         inflateTextCard("Начало записи " + textTime,false)
 
-
+        thread =Thread(Runnable {
+            while(true) {
+                val millisec = System.currentTimeMillis() - startTime.value!!
+                hh.postValue("${millisec / 3600000}")
+                mm.postValue("${millisec % 3600000 / 60000}")
+                ss.postValue("${millisec % 3600000 % 60000 / 1000}")
+                Thread.sleep(1000)
+                if(end){
+                    break
+                }
+            }
+        })
+        thread.start()
     }
 
     public fun initModel() {
@@ -113,6 +139,15 @@ public class MainViewModel : ViewModel() {
            // setUiState(State.DONE)
             speechService!!.stop()
             speechService = null
+            end = true
+            Log.d("ALLTEXT",allText.value.toString())
+            if(allText.value.toString().isNotEmpty()) {
+                mainRepository.sendText(allText.value.toString())
+            }
+
+            val intent = Intent()
+            activity.setResult(0)
+            activity.finish()
         } else {
             Log.d("MICRO","first")
 
@@ -209,15 +244,10 @@ public class MainViewModel : ViewModel() {
         val jObject = JSONObject(hypothesis)
         val res = jObject.getString("text")
         println(res)
-        voiseText.postValue(voiseText.value+
-                (res + " " + FuzzySearch.ratio(
-                    res,
-                    "собака лежать"
-                )).toString() + "\n"
-        )
+
         if(!res.isEmpty()) {
             inflateTextCard(res)
-            mainRepository.sendText(res)
+            allText.postValue(allText.value!!.append(res).append(" "))
         }
 
     }

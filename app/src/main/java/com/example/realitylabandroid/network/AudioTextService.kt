@@ -3,7 +3,11 @@ package com.example.realitylabandroid.network
 import android.R.attr.data
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.Nullable
 import com.example.realitylabandroid.api.AudioTextAPI
 import okhttp3.MediaType
@@ -23,25 +27,32 @@ import java.io.InputStream
 class AudioTextService(val context: Context) {
     public val retrofit:Retrofit
     public val apiService:AudioTextAPI
+    val handler:Handler
     init{
         val okHttpClient = OkHttpClient.Builder()
             .build()
         retrofit = Retrofit.Builder()
             .client(okHttpClient)
-            .baseUrl("http://158.160.128.49:8000")
+            .baseUrl("http://51.250.19.25:8000")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         apiService = retrofit.create(AudioTextAPI::class.java)
+        handler = Handler(Looper.getMainLooper()){ it->
+            Toast.makeText(context,"Запись успешно отправлена!",Toast.LENGTH_LONG).show()
+            true
+        }
     }
 
     public fun sendText(text:com.example.realitylabandroid.api.RequestBody){
         apiService.sendText(text).enqueue(object : Callback<com.example.realitylabandroid.api.RequestBody> {
             override fun onResponse(call: Call<com.example.realitylabandroid.api.RequestBody>, response: Response<com.example.realitylabandroid.api.RequestBody>) {
-                Log.d("RESPONSE","${response.body()!!.text}")
-                Log.d("RESPONSE","${response.code()}")
-                Log.d("RESPONSE","${response.code()}")
+               // Log.d("RESPONSE","${response.body()!!.text}")
+               // Log.d("RESPONSE","${response.code()}")
+              //  Log.d("RESPONSE","${response.code()}")
 
+                val msg = Message()
+                handler.sendMessage(msg)
 
 
 
