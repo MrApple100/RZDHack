@@ -29,7 +29,7 @@ class AudioRecognizeActivity : AppCompatActivity() {
 
 
         if(allPermissionGranted()){
-            viewModel.create(this,this,binding.ll )
+            viewModel.create(this,this,binding.ll,binding.SV )
             binding.executePendingBindings()
             binding.invalidateAll()
         }else{
@@ -56,7 +56,7 @@ class AudioRecognizeActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            viewModel.create(this,this,binding.ll)
+            viewModel.create(this,this,binding.ll,binding.SV)
         }
 
 

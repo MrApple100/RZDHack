@@ -1,9 +1,12 @@
 package com.example.realitylabandroid.viewmodel
 
 import android.content.Context
+import android.text.SpannableString
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import com.example.realitylabandroid.MyRecognitionListener
 import com.example.realitylabandroid.R
 import com.example.realitylabandroid.repo.MainRepository
+import com.example.realitylabandroid.utils.Attantioner
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.json.JSONObject
 import org.vosk.LibVosk
@@ -22,6 +26,7 @@ import org.vosk.android.SpeechStreamService
 import org.vosk.android.StorageService
 import java.io.IOException
 import java.text.SimpleDateFormat
+import java.util.Date
 
 
 public class MainViewModel : ViewModel() {
@@ -41,12 +46,16 @@ public class MainViewModel : ViewModel() {
     lateinit var enabledButtonStopContinue:MutableLiveData<Boolean>
     lateinit var toggleButtonStopContinue:MutableLiveData<Boolean>
     lateinit var linearLayout: LinearLayout
+    lateinit var scrollView: ScrollView
+
+    lateinit var startTime:MutableLiveData<Long>
 
 
-    public fun create(activity:AppCompatActivity,context: Context,linearLayout: LinearLayout) {
+    public fun create(activity:AppCompatActivity,context: Context,linearLayout: LinearLayout,scrollView: ScrollView) {
         this.context = context
         this.activity = activity
         this.linearLayout = linearLayout
+        this.scrollView = scrollView
 
 
         mainRepository = MainRepository(context)
@@ -66,10 +75,16 @@ public class MainViewModel : ViewModel() {
         textButtonStopContinue = MutableLiveData<String>(context.getString(R.string.pause))
         enabledButtonStopContinue = MutableLiveData<Boolean>(false);
         toggleButtonStopContinue = MutableLiveData<Boolean>(false);
+        startTime = MutableLiveData<Long>(0)
 
 //        inflateGreenCard(1000)
 //        inflateGreenCard(6000)
 //        inflateRedCard(10000)
+        val sdf = SimpleDateFormat("HH:mm:ss")
+        startTime.postValue(System.currentTimeMillis())
+        val textTime = sdf.format(Date(System.currentTimeMillis()))
+        inflateTextCard("Начало записи " + textTime,false)
+
 
     }
 
@@ -132,28 +147,53 @@ public class MainViewModel : ViewModel() {
         }
     }
     public fun inflateGreenCard(millisec:Long){
-        val greenCard = View.inflate(context,R.layout.cardgreentextaudio,linearLayout);
+        val ltInflater: LayoutInflater = activity.layoutInflater
+        val greenCard: View = ltInflater.inflate(R.layout.cardgreentextaudio, linearLayout, false)
         val hh = greenCard.findViewById<TextView>(R.id.hh);
         val mm = greenCard.findViewById<TextView>(R.id.mm);
         val ss = greenCard.findViewById<TextView>(R.id.ss);
         hh.text = "${millisec/3600000}"
         mm.text = "${millisec%3600000/60000}"
         ss.text = "${millisec%3600000%60000/1000}"
+        linearLayout.addView(greenCard)
     }
     public fun inflateRedCard(millisec:Long){
-        val redCard = View.inflate(context,R.layout.cardredtextaudio,linearLayout);
+        val ltInflater: LayoutInflater = activity.layoutInflater
+        val redCard: View = ltInflater.inflate(R.layout.cardredtextaudio, linearLayout, false)
         val hh = redCard.findViewById<TextView>(R.id.hh);
         val mm = redCard.findViewById<TextView>(R.id.mm);
         val ss = redCard.findViewById<TextView>(R.id.ss);
         hh.text = "${millisec/3600000}"
         mm.text = "${millisec%3600000/60000}"
         ss.text = "${millisec%3600000%60000/1000}"
+        linearLayout.addView(redCard)
     }
 
-    public fun inflateTextCard(textstr:String){
-        val textCard = View.inflate(context,R.layout.cardtext,linearLayout);
+    public fun inflateTextCard(textstr:String,boolean: Boolean = true){
+        val ltInflater: LayoutInflater = activity.layoutInflater
+        val textCard: View = ltInflater.inflate(R.layout.cardtext, linearLayout, false)
         val text = textCard.findViewById<TextView>(R.id.cardTV)
-        text.text = textstr
+        if(boolean) {
+            val yellow_words = Attantioner.checkOnGoodWord(textstr)//yellow
+            val red_words = Attantioner.checkOnWarningWord(textstr)//red
+            val ss = Attantioner.drawRedYellow(textstr, red_words, yellow_words)
+
+            text.text = ss
+            linearLayout.addView(textCard)
+            if (red_words.isNotEmpty()) {
+                inflateRedCard(System.currentTimeMillis() - startTime.value!!)
+            } else if (yellow_words.isNotEmpty()) {
+                inflateGreenCard(System.currentTimeMillis() - startTime.value!!)
+            }
+        }else{
+            text.text = textstr
+            linearLayout.addView(textCard)
+        }
+
+        scrollView.post(Runnable {
+            scrollView.fullScroll(ScrollView.FOCUS_DOWN)
+
+        })
 
     }
 
