@@ -1,6 +1,6 @@
 package com.example.realitylabandroid.network
 
-import android.R.attr.data
+import android.R.id
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
@@ -9,6 +9,7 @@ import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.Nullable
+import androidx.core.net.toFile
 import com.example.realitylabandroid.api.AudioTextAPI
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -67,35 +68,52 @@ class AudioTextService(val context: Context) {
         })
     }
     public fun uploadFile(audioFile:File){
-       // val filePart = packFile(context, "audio[file]", Uri.fromFile(audioFile))!!
-//        apiService.uploadAudioFile(filePart).enqueue(object : Callback<String> {
-//            override fun onResponse(call: Call<String>, response: Response<String>) {
-//                // handle the response
-//            }
-//
-//            override fun onFailure(call: Call<String>, t: Throwable) {
-//                // handle the failure
-//            }
-//        })
+        //pass it like this
+        //pass it like this
+        val file = audioFile
+        val requestFile = RequestBody.create(MultipartBody.FORM, file)
+
+
+// MultipartBody.Part is used to send also the actual file name
+        val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+// add another part within the multipart request
+
+// add another part within the multipart request
+     //   val fullName = RequestBody.create(MultipartBody.FORM, "Your Name")
+
+      //  val filePart = packFile(context, "file", audioFileUri)!!
+        apiService.uploadAudioFile(body).enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                // handle the response
+                 Log.d("RESPONSE","${response.code()}")
+            }
+
+            override fun onFailure(call: Call<String>, t: Throwable) {
+                // handle the failure
+                Log.d("FAILFAIL",t.message.toString())
+
+            }
+        })
     }
 
-//    @Nullable
-//    fun packFile(context: Context, partName: String, @Nullable fileUri: Uri?): MultipartBody.Part? {
-//        if (fileUri == null) return null
-//        val cr = context.contentResolver
-//        var tp = cr.getType(fileUri)
-//        if (tp == null) {
-//            tp = "audio"
-//        }
-//        return try {
-//            val iStream = context.contentResolver.openInputStream(fileUri)
-//            val inputData = getBytes(iStream)
-//            val requestFile = RequestBody.create(MediaType.parse(tp), inputData)
-//            MultipartBody.Part.createFormData(partName, fileUri.lastPathSegment, requestFile)
-//        } catch (e: Exception) {
-//            null
-//        }
-//    }
+    @Nullable
+    fun packFile(context: Context, partName: String, @Nullable fileUri: Uri?): MultipartBody.Part? {
+        if (fileUri == null) return null
+        val cr = context.contentResolver
+        var tp = cr.getType(fileUri)
+        if (tp == null) {
+            tp = "audio"
+        }
+        return try {
+            val iStream = context.contentResolver.openInputStream(fileUri)
+            val inputData = getBytes(iStream)
+            val requestFile = RequestBody.create(MediaType.parse(tp), inputData)
+            MultipartBody.Part.createFormData(partName, fileUri.lastPathSegment, requestFile)
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     @Nullable
 

@@ -1,24 +1,17 @@
 package com.example.realitylabandroid
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
-import androidx.activity.result.ActivityResultCallback
+import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import androidx.core.net.toFile
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModelProvider
 import com.example.realitylabandroid.databinding.ActivityMainBinding
 import com.example.realitylabandroid.viewmodel.FileViewModel
-import com.example.realitylabandroid.viewmodel.MainViewModel
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewModel:FileViewModel
@@ -40,12 +33,26 @@ class MainActivity : AppCompatActivity() {
 
     val audioPickerActivity = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            val file = uri.toFile()
-            viewModel.fetchFile(file)
+
+          //  viewModel.fetchFile(File(getPath(uri)))
         }
     }
 
+    fun getPath(uri: Uri?): String? {
+        val projection = arrayOf(MediaStore.Audio.Media.DATA)
+        val cursor: Cursor = getContentResolver().query(uri!!, projection, null, null, null)
+        ?: return null
+        val column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+        cursor.moveToFirst()
+        val s = cursor.getString(column_index)
+        cursor.close()
+        return s
+    }
 }
+
+
+
+
 
 
 

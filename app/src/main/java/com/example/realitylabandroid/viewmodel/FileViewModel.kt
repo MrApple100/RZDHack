@@ -3,6 +3,7 @@ package com.example.realitylabandroid.viewmodel
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -10,12 +11,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.realitylabandroid.AudioRecognizeActivity
 import com.example.realitylabandroid.R
+import com.example.realitylabandroid.repo.MainRepository
 import java.io.File
 
 class FileViewModel:ViewModel() {
     lateinit var audioPickerActivity:ActivityResultLauncher<String>
     lateinit var context:Context
     lateinit var activity: AppCompatActivity
+    lateinit var mainRepository: MainRepository
+
 
 
 
@@ -29,6 +33,9 @@ class FileViewModel:ViewModel() {
         this.context = context
         this.activity = activity
         this.audioPickerActivity = audioPickerActivity
+
+        mainRepository = MainRepository(context)
+
 
         textButtonFile = MutableLiveData<String>(context.getString(R.string.recognize_file))
         textButtonMicro = MutableLiveData<String>(context.getString(R.string.recognize_microphone))
@@ -74,8 +81,8 @@ class FileViewModel:ViewModel() {
 //        audioPickerActivity.launch(Intent.createChooser(videoIntent, "Select Audio"))
     }
 
-    fun fetchFile(file: File) {
-        file.name
+    fun fetchFile(uri: File) {
+        mainRepository.uploadFile(uri)
     }
 
 }

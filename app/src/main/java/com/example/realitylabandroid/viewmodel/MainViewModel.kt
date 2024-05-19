@@ -146,7 +146,7 @@ public class MainViewModel : ViewModel() {
             }
 
             val intent = Intent()
-            activity.setResult(0)
+            activity.setResult(0,intent)
             activity.finish()
         } else {
             Log.d("MICRO","first")
