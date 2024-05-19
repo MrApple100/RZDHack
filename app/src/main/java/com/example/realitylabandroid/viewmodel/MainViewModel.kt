@@ -2,8 +2,15 @@ package com.example.realitylabandroid.viewmodel
 
 import android.content.Context
 import android.util.Log
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.realitylabandroid.MyRecognitionListener
+import com.example.realitylabandroid.R
+import com.example.realitylabandroid.repo.MainRepository
 import me.xdrop.fuzzywuzzy.FuzzySearch
 import org.json.JSONObject
 import org.vosk.LibVosk
@@ -13,34 +20,36 @@ import org.vosk.Recognizer
 import org.vosk.android.SpeechService
 import org.vosk.android.SpeechStreamService
 import org.vosk.android.StorageService
-import com.example.realitylabandroid.MyRecognitionListener
-import com.example.realitylabandroid.R
-import com.example.realitylabandroid.repo.MainRepository
-import com.example.realitylabandroid.viewmodel.component.State
 import java.io.IOException
-import java.io.InputStream
+import java.text.SimpleDateFormat
 
 
 public class MainViewModel : ViewModel() {
-    val mainRepository = MainRepository()
+   // lateinit var AUDIO_REQUEST:Int
+
+    lateinit var mainRepository:MainRepository
     lateinit var context:Context
+    lateinit var activity:AppCompatActivity
+
     lateinit var myRecognitionListener:MyRecognitionListener
 
     private var model: Model? = null
     private var speechService: SpeechService? = null
     private var speechStreamService: SpeechStreamService? = null
 
-    lateinit var textButtonFile:MutableLiveData<String>
-    lateinit var textButtonMicro:MutableLiveData<String>
     lateinit var textButtonStopContinue:MutableLiveData<String>
-    lateinit var enabledButtonFile:MutableLiveData<Boolean>
-    lateinit var enabledButtonMicro:MutableLiveData<Boolean>
     lateinit var enabledButtonStopContinue:MutableLiveData<Boolean>
     lateinit var toggleButtonStopContinue:MutableLiveData<Boolean>
+    lateinit var linearLayout: LinearLayout
 
 
-    public fun create(context: Context) {
+    public fun create(activity:AppCompatActivity,context: Context,linearLayout: LinearLayout) {
         this.context = context
+        this.activity = activity
+        this.linearLayout = linearLayout
+
+
+        mainRepository = MainRepository(context)
         myRecognitionListener = MyRecognitionListener(
             ::onResult,
             ::onFinalResult,
@@ -54,15 +63,13 @@ public class MainViewModel : ViewModel() {
         initModel()
         Log.d("ViewModel","third")
 
-
-        textButtonFile = MutableLiveData<String>(context.getString(R.string.recognize_file))
-        textButtonMicro = MutableLiveData<String>(context.getString(R.string.recognize_microphone))
         textButtonStopContinue = MutableLiveData<String>(context.getString(R.string.pause))
-
-        enabledButtonFile = MutableLiveData<Boolean>(false);
-        enabledButtonMicro = MutableLiveData<Boolean>(false);
         enabledButtonStopContinue = MutableLiveData<Boolean>(false);
         toggleButtonStopContinue = MutableLiveData<Boolean>(false);
+
+//        inflateGreenCard(1000)
+//        inflateGreenCard(6000)
+//        inflateRedCard(10000)
 
     }
 
@@ -70,7 +77,8 @@ public class MainViewModel : ViewModel() {
         StorageService.unpack(context, "model-en-us", "model",
             { model: Model? ->
                 this.model = model
-                setUiState(State.READY)
+               // setUiState(State.READY)
+                startMicroRecognise();
             },
             { exception: IOException ->
                 setErrorState(
@@ -83,33 +91,17 @@ public class MainViewModel : ViewModel() {
 
     var voiseText = MutableLiveData<String>()
 
-    public fun clickButtonFile(){
-        setUiState(State.FILE)
-        try {
-            Thread(Runnable {
-                val rec = Recognizer(
-                    model, 90000f)//64000 //88200 //96000
-                val ais: InputStream = context.getAssets().open(
-                    "96k63.wav"
-                )
-               // if (ais.skip(44) != 44L) throw IOException("File too short")
-                speechStreamService = SpeechStreamService(rec, ais, 90000f)
-                speechStreamService!!.start(myRecognitionListener)
-            }).start()
 
-        } catch (e: IOException) {
-            setErrorState(e.message!!)
-        }
-    }
-    public fun clickButtonMicro() {
+
+    public fun startMicroRecognise(){
         if (speechService != null) {
-            setUiState(State.DONE)
+           // setUiState(State.DONE)
             speechService!!.stop()
             speechService = null
         } else {
             Log.d("MICRO","first")
 
-            setUiState(State.MIC)
+          //  setUiState(State.MIC)
             Log.d("MICRO","Second")
 
             try {
@@ -127,6 +119,7 @@ public class MainViewModel : ViewModel() {
             }
         }
     }
+
     public fun clickPause() {
         if (speechService != null) {
             toggleButtonStopContinue.postValue(!toggleButtonStopContinue.value!!)
@@ -138,62 +131,35 @@ public class MainViewModel : ViewModel() {
             }
         }
     }
+    public fun inflateGreenCard(millisec:Long){
+        val greenCard = View.inflate(context,R.layout.cardgreentextaudio,linearLayout);
+        val hh = greenCard.findViewById<TextView>(R.id.hh);
+        val mm = greenCard.findViewById<TextView>(R.id.mm);
+        val ss = greenCard.findViewById<TextView>(R.id.ss);
+        hh.text = "${millisec/3600000}"
+        mm.text = "${millisec%3600000/60000}"
+        ss.text = "${millisec%3600000%60000/1000}"
+    }
+    public fun inflateRedCard(millisec:Long){
+        val redCard = View.inflate(context,R.layout.cardredtextaudio,linearLayout);
+        val hh = redCard.findViewById<TextView>(R.id.hh);
+        val mm = redCard.findViewById<TextView>(R.id.mm);
+        val ss = redCard.findViewById<TextView>(R.id.ss);
+        hh.text = "${millisec/3600000}"
+        mm.text = "${millisec%3600000/60000}"
+        ss.text = "${millisec%3600000%60000/1000}"
+    }
 
+    public fun inflateTextCard(textstr:String){
+        val textCard = View.inflate(context,R.layout.cardtext,linearLayout);
+        val text = textCard.findViewById<TextView>(R.id.cardTV)
+        text.text = textstr
 
-
-    private fun setUiState(state: State) {
-
-        when (state) {
-            State.START -> {
-                voiseText.postValue(context.getString(R.string.preparing))
-               // resultView.setMovementMethod(ScrollingMovementMethod())
-                enabledButtonFile.postValue( false)
-                enabledButtonMicro.postValue( false)
-                enabledButtonStopContinue.postValue(false)
-            }
-
-            State.READY -> {
-                voiseText.postValue(context.getString(R.string.ready))
-                enabledButtonFile.postValue(true)
-                textButtonMicro.postValue(context.getString(R.string.recognize_microphone))
-                enabledButtonMicro.postValue(true)
-                enabledButtonStopContinue.postValue(false)
-            }
-
-            State.DONE -> {
-                textButtonFile.postValue(context.getString(R.string.recognize_file))
-                enabledButtonFile.postValue(true)
-                textButtonMicro.postValue(context.getString(R.string.recognize_microphone))
-                enabledButtonMicro.postValue(true)
-                enabledButtonStopContinue.postValue(false)
-            }
-
-            State.FILE -> {
-                voiseText.postValue(context.getString(R.string.starting))
-                enabledButtonMicro.postValue(false)
-                textButtonFile.postValue(context.getString(R.string.stop_file))
-                enabledButtonFile.postValue(true)
-                enabledButtonStopContinue.postValue(false)
-            }
-
-            State.MIC -> {
-                voiseText.postValue(context.getString(R.string.say_something))
-                enabledButtonFile.postValue( false)
-                textButtonMicro.postValue(context.getString(R.string.stop_microphone))
-                enabledButtonMicro.postValue(true)
-                enabledButtonStopContinue.postValue(true)
-            }
-
-            else -> throw IllegalStateException("Unexpected value: $state")
-        }
     }
 
 
     private fun setErrorState(message: String) {
         voiseText.postValue(message)
-        textButtonMicro.value = context.getString(R.string.recognize_microphone)
-        enabledButtonMicro.value = false
-        enabledButtonFile.value = false
     }
 
 
@@ -209,13 +175,16 @@ public class MainViewModel : ViewModel() {
                     "собака лежать"
                 )).toString() + "\n"
         )
-        mainRepository.sendText(res)
+        if(!res.isEmpty()) {
+            inflateTextCard(res)
+            mainRepository.sendText(res)
+        }
 
     }
     fun onFinalResult(hypothesis: String) {
         voiseText.postValue(voiseText.value + hypothesis + "\n")
 
-        setUiState(State.DONE)
+        //setUiState(State.DONE)
         if (speechStreamService != null) {
             speechStreamService = null
         }
@@ -230,8 +199,10 @@ public class MainViewModel : ViewModel() {
         setErrorState(eStr)
     }
     fun onTimeout() {
-        setUiState(State.DONE)
+      //  setUiState(State.DONE)
     }
+
+
 
 
 }

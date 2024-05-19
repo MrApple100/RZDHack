@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="viewmodel"
+            type="com.example.realitylabandroid.viewmodel.MainViewModel" />
+    </data>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="vertical"
+            android:background="@color/red"
+            android:gravity="bottom"
+            >
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="25sp"
+                android:text="Запись переговоров"
+                android:padding="10dp">
+            </TextView>
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="400dp">
+                        <LinearLayout
+                            android:id="@+id/ll"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical">
+
+<!--                        <TextView-->
+<!--                            android:id="@+id/result_text"-->
+<!--                            android:layout_width="fill_parent"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:gravity="bottom"-->
+<!--                            android:scrollbars="vertical"-->
+<!--                            android:text="@{viewmodel.voiseText}"-->
+<!--                            android:textAppearance="?android:attr/textAppearanceMedium" />-->
+                        </LinearLayout>
+
+                    </ScrollView>
+        </LinearLayout>
+<!--        <include-->
+<!--            layout="@layout/bottomsheetaudio"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            app:behavior_hideable="false"-->
+<!--            app:behavior_peekHeight="74dp"-->
+<!--            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior" />-->
+
+    </LinearLayout>
+</layout>
